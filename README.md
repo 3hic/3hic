@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/chuva.svg" alt="0r4y — Python · SQLite3 · Discord bots" width="100%">
+<img src="assets/chuva.svg" alt="3hic — Python · SQLite3 · Discord bots" width="100%">
 
 <br><br>
 
@@ -15,7 +15,7 @@
 
 <br><br>
 
-<a href="https://github.com/0r4y/Bot-discord"><img src="assets/projeto.svg" alt="Bot-discord — bot de comunidade para Discord em Python" width="100%"></a>
+<a href="https://github.com/3hic/Bot-discord"><img src="assets/projeto.svg" alt="Bot-discord — bot de comunidade para Discord em Python" width="100%"></a>
 
 <br><br>
 

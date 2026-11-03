@@ -48,7 +48,7 @@
       <text x="34" y="88" fill="#333333" text-anchor="end">2</text>
       <text x="52" y="88" xml:space="preserve"></text>
       <text x="34" y="110" fill="#333333" text-anchor="end">3</text>
-      <text x="52" y="110" xml:space="preserve"><tspan fill="#a3a3a3">conn</tspan><tspan fill="#a3a3a3"> = </tspan><tspan fill="#a3a3a3">sqlite3</tspan><tspan fill="#a3a3a3">.</tspan><tspan fill="#d0d0d0">connect</tspan><tspan fill="#a3a3a3">(</tspan><tspan fill="#8c8c8c">&quot;0r4y.db&quot;</tspan><tspan fill="#a3a3a3">)</tspan></text>
+      <text x="52" y="110" xml:space="preserve"><tspan fill="#a3a3a3">conn</tspan><tspan fill="#a3a3a3"> = </tspan><tspan fill="#a3a3a3">sqlite3</tspan><tspan fill="#a3a3a3">.</tspan><tspan fill="#d0d0d0">connect</tspan><tspan fill="#a3a3a3">(</tspan><tspan fill="#8c8c8c">&quot;3hic.db&quot;</tspan><tspan fill="#a3a3a3">)</tspan></text>
       <text x="34" y="132" fill="#333333" text-anchor="end">4</text>
       <text x="52" y="132" xml:space="preserve"><tspan fill="#a3a3a3">conn</tspan><tspan fill="#a3a3a3">.</tspan><tspan fill="#d0d0d0">execute</tspan><tspan fill="#a3a3a3">(</tspan><tspan fill="#8c8c8c">&quot;CREATE TABLE IF NOT EXISTS sobre (chave TEXT, valor TEXT)&quot;</tspan><tspan fill="#a3a3a3">)</tspan></text>
       <text x="34" y="154" fill="#333333" text-anchor="end">5</text>
