@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300">
+  <defs><linearGradient id="agora" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3b82f6"/><stop offset="0.55" stop-color="#6d5dfc"/><stop offset="1" stop-color="#c026d3"/></linearGradient><radialGradient id="luz" cx="0.85" cy="0.1" r="0.6"><stop offset="0" stop-color="#ffffff" stop-opacity="0.35"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient></defs>
+  <rect x="0.5" y="0.5" width="299" height="299" rx="34" fill="none" stroke="#2c2c2e"/>
+  <rect x="0.5" y="0.5" width="299" height="299" rx="34" fill="url(#agora)"/>
+  <rect x="0.5" y="0.5" width="299" height="299" rx="34" fill="url(#luz)"/>
+  <circle cx="34" cy="43" r="5" fill="#4ade80"><animate attributeName="opacity" values="1;0.35;1" dur="2.4s" repeatCount="indefinite"/></circle>
+  <text x="48" y="48" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Segoe UI Variable Display', 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="15" font-weight="600" fill="#ffffff" fill-opacity="0.9">Agora</text>
+  <path d="M252 30 l4 10 10 4 -10 4 -4 10 -4 -10 -10 -4 10 -4 z" fill="#ffffff" fill-opacity="0.85"/>
+  <text font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Segoe UI Variable Display', 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="33" font-weight="700" letter-spacing="-0.8" fill="#ffffff"><tspan x="28" y="152">Automação</tspan><tspan x="28" y="190">com IA</tspan></text>
+  <text x="28" y="262" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Segoe UI Variable Display', 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="14.5" fill="#ffffff" fill-opacity="0.88">Python, OCR e Selenium</text>
+</svg>
