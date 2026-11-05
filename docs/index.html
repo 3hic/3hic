@@ -156,7 +156,7 @@
     help() {
       [['fastfetch / neofetch', 'a ficha do 3hic'], ['whoami', 'quem está no navi'], ['cat sobre.txt', 'sobre mim'],
        ['ls', 'arquivos'], ['mail', 'abre a caixa de entrada'], ['som / parar', 'o som da wired (com volume lá embaixo)'],
-       ['duvet', 'a abertura, no spotify'], ['say <texto>', 'o navi fala'], ['layers', 'os 13 layers'],
+       ['duvet', 'toca a abertura aqui (player do spotify)'], ['say <texto>', 'o navi fala'], ['layers', 'os 13 layers'],
        ['date', 'que dia é hoje'], ['history', 'o que você digitou'], ['clear', 'limpa a tela']]
         .forEach(([c, d]) => linha(`<span class="v">${esc(c.padEnd(22))}</span><span class="d">${esc(d)}</span>`));
     },
@@ -174,9 +174,11 @@
       linha('<span class="serif glitch">deus está aqui.</span>');
     },
     som: () => som(true), parar: () => som(false), stop: () => som(false),
-    duvet() {
-      texto('abrindo Duvet (bôa) no spotify...', 'k');
-      window.open('https://open.spotify.com/track/42qNWdLKCI41S4uzfamhFM', '_blank', 'noopener');
+    duvet() {   // o player oficial do Spotify, dentro do terminal (aperte o play dele)
+      texto('♪ duvet, de bôa: a abertura de serial experiments lain. aperte o play.', 'k');
+      linha('<iframe title="Duvet, de bôa, no Spotify" src="https://open.spotify.com/embed/track/42qNWdLKCI41S4uzfamhFM?theme=0" ' +
+            'width="100%" height="152" style="border:0;border-radius:12px;max-width:520px;margin:6px 0" ' +
+            'allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>');
     },
     layers: () => ['weird', 'girls', 'psyche', 'religion', 'distortion', 'kids', 'society', 'rumors', 'protocol',
                    'love', 'infornography', 'landscape', 'ego']

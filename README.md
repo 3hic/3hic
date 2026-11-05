@@ -22,10 +22,6 @@
 
 <a href="https://open.spotify.com/track/42qNWdLKCI41S4uzfamhFM"><img src="assets/player.svg" width="640" alt="Tocando Duvet, de bôa, a abertura de Serial Experiments Lain (3:23). Clique para ouvir no Spotify."></a>
 
-<sub>som da wired: o zumbido dos postes, pulsando em 7,83 Hz. aperte o play (tem volume)</sub>
-
-https://github.com/user-attachments/assets/fedfd7fe-8915-4151-a0e7-29a80edd13eb
-
 <img src="assets/rodape.svg" width="100%" alt="no matter where you go, everyone's connected. (Lain, Layer:02)">
 
 </div>
