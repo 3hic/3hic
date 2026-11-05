@@ -158,13 +158,39 @@ def fio(d, cor, largura, zumbido=None, extra=''):
             'calcMode="spline" keySplines=".45 0 .55 1;.45 0 .55 1"/></path>')
 
 
+CLAWD = [  # o bonequinho do Claude Code, do jeito que aparece no terminal: a NAVI do 3hic
+    ' ▐▛███▜▌',
+    '▝▜█████▛▘',
+    '  ▘▘ ▝▝',
+]
+QUADRANTES = {' ': '', '█': 'abcd', '▌': 'ac', '▐': 'bd', '▀': 'ab', '▄': 'cd', '▘': 'a', '▝': 'b', '▖': 'c',
+              '▗': 'd', '▛': 'abc', '▜': 'abd', '▙': 'acd', '▟': 'bcd'}   # a b / c d = os 4 quadrantes do bloco
+CLAUDE = '#D97757'
+PIXELS_CLAWD = {(c * 2 + (q in 'bd'), lin * 2 + (q in 'cd'))
+                for lin, linha in enumerate(CLAWD) for c, ch in enumerate(linha) for q in QUADRANTES[ch]}
+
+
+def clawd(ox, oy, pw, ph, extra=''):
+    """O Clawd em retângulos (cada linha de pixels vizinhos vira um retângulo só, sem frestas)."""
+    rets = []
+    for y in sorted({y for _, y in PIXELS_CLAWD}):
+        xs = sorted(x for x, yy in PIXELS_CLAWD if yy == y)
+        ini = ant = xs[0]
+        for x in xs[1:] + [None]:
+            if x != ant + 1:
+                rets.append(f'<rect x="{n(ox + ini * pw)}" y="{n(oy + y * ph)}" width="{n((ant - ini + 1) * pw)}" '
+                            f'height="{n(ph)}"/>')
+                ini = x
+            ant = x
+    return f'<g fill="{CLAUDE}"{extra}>{"".join(rets)}</g>'
+
+
 def janela(s, t, w, h, titulo, direita):
-    """Janela do Copland OS: barra com a tachibana (mexerica), título à esquerda e um detalhe à direita."""
+    """Janela do Copland OS: barra com o Clawd (a NAVI), título à esquerda e um detalhe à direita."""
     s.add(f'<rect x=".5" y=".5" width="{w - 1}" height="{h - 1}" rx="7" fill="{t["fundo"]}" stroke="{t["borda"]}"/>',
           f'<path d="M.5 32V7.5A7 7 0 0 1 7.5 .5H{w - 7.5}A7 7 0 0 1 {w - .5} 7.5V32Z" fill="{t["sup"]}"/>',
           f'<path d="M.5 32.5H{w - .5}" stroke="{t["borda"]}"/>',
-          f'<circle cx="20" cy="16.5" r="5.5" fill="{LARANJA}"/>'
-          f'<ellipse cx="23.6" cy="10.6" rx="3.1" ry="1.4" transform="rotate(-32 23.6 10.6)" fill="{FOLHA}"/>',
+          clawd(11, 11.5, 1.05, 2.1),
           s.texto(titulo, 'dot', 34, 21.5, 14, t['texto2']),
           s.texto(direita, 'dot', w - 16, 21.5, 13, t['texto3'], ancora='end'))
 
@@ -319,14 +345,6 @@ def hero(t):
 
 # ---------------------------------------------------------------- NAVI: fastfetch no Copland OS
 
-CLAWD = [  # o bonequinho do Claude Code, do jeito que aparece no terminal: a NAVI do 3hic
-    ' ▐▛███▜▌',
-    '▝▜█████▛▘',
-    '  ▘▘ ▝▝',
-]
-QUADRANTES = {' ': '', '█': 'abcd', '▌': 'ac', '▐': 'bd', '▀': 'ab', '▄': 'cd', '▘': 'a', '▝': 'b', '▖': 'c',
-              '▗': 'd', '▛': 'abc', '▜': 'abd', '▙': 'acd', '▟': 'bcd'}   # a b / c d = os 4 quadrantes do bloco
-CLAUDE = '#D97757'
 FICHA = [  # o que o fastfetch mostra: o "sistema" é a Wired, o resto é o 3hic
     ('OS', 'Copland OS Enterprise'),
     ('Host', 'NAVI (Claude Code)'),
@@ -352,26 +370,15 @@ def navi(t):
     cw = tam * .5                      # DotGothic16: toda letra latina mede meia eme
     tt = linhas_digitadas(s, t, ['say -v Whisper "Weird: Layer zero one"', 'fastfetch'], x0, [58, 80], tam, .5)
     # o logo: o Clawd em pixels (cada caractere de bloco vira 2×2 quadrantes, altos como no terminal)
-    pix = {(c * 2 + (q in 'bd'), lin * 2 + (q in 'cd'))
-           for lin, linha in enumerate(CLAWD) for c, ch in enumerate(linha) for q in QUADRANTES[ch]}
+    pix = PIXELS_CLAWD
     pw, ph = 9, 18
     largura = (max(x for x, _ in pix) + 1) * pw
     ox, oy = x0 + (24 * cw - largura) / 2, 92
-    corridas = []      # junta os pixels vizinhos de cada linha num retângulo só (sem frestas)
-    for y in sorted({y for _, y in pix}):
-        xs = sorted(x for x, yy in pix if yy == y)
-        ini = ant = xs[0]
-        for x in xs[1:] + [None]:
-            if x != ant + 1:
-                corridas.append(f'<rect x="{n(ox + ini * pw)}" y="{oy + y * ph}" width="{(ant - ini + 1) * pw}" '
-                                f'height="{ph}"/>')
-                ini = x
-            ant = x
     olhos = [(x, 1) for x in range(min(x for x, _ in pix), max(x for x, _ in pix)) if (x, 1) not in pix
              and (x - 1, 1) in pix and (x + 1, 1) in pix]
-    piscar = ''.join(f'<rect class="olho" x="{n(ox + x * pw)}" y="{oy + y * ph}" width="{pw}" height="{ph}"/>'
-                     for x, y in olhos)
-    s.add(f'<g class="l" fill="{CLAUDE}" style="animation-delay:{tt:.2f}s">{"".join(corridas)}{piscar}</g>',
+    piscar = ''.join(f'<rect class="olho" x="{n(ox + x * pw)}" y="{oy + y * ph}" width="{pw}" height="{ph}" '
+                     f'fill="{CLAUDE}"/>' for x, y in olhos)
+    s.add(f'<g class="l" style="animation-delay:{tt:.2f}s">{clawd(ox, oy, pw, ph)}{piscar}</g>',
           s.texto('claude code', 'dot', x0 + 12 * cw, oy + 3 * ph + 58, 13, CLAUDE, ancora='middle', cls='l',
                   extra=f' style="animation-delay:{tt + .1:.2f}s"'),
           s.texto('minha navi ♡', 'dot', x0 + 12 * cw, oy + 3 * ph + 78, 12, t['texto3'], ancora='middle', cls='l',
@@ -406,7 +413,7 @@ def navi(t):
           f'<path d="M.5 368.5H{W - .5}" stroke="{t["borda"]}"/>',
           f'<circle cx="24" cy="385" r="3.2" fill="{t["vermelho"]}"/>',
           s.texto('conectado à wired', 'dot', 34, 389.5, 13, t['texto3']),
-          s.texto('7,83 Hz', 'dot', W - 18, 389.5, 13, t['texto3'], ancora='end'))
+          s.texto('clique para digitar ›', 'dot', W - 18, 389.5, 13, t['texto2'], ancora='end'))
     s.css.append(CSS_DIGITACAO)
     return s
 

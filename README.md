@@ -4,7 +4,7 @@
 <img src="assets/wired-hero.svg" width="100%" alt="serial experiments 3hic. present day, present time. Postes e fios contra o céu da noite e, na placa do poste, ワイヤード (Wired).">
 
 <picture><img src="assets/lain-retrato.gif" width="40%" alt="Lain com o gorro de urso, cheia de glitch"></picture>
-<img src="assets/navi.svg" width="57%" alt="Terminal do NAVI rodando fastfetch com o bonequinho do Claude Code: OS Copland OS Enterprise; Host NAVI (Claude Code); linguagens Python e JavaScript; faz bots para Discord e automação; agora automação com IA; lema: sempre aprendendo, sempre construindo.">
+<a href="https://3hic.github.io/3hic/"><img src="assets/navi.svg" width="57%" alt="Terminal do NAVI rodando fastfetch com o bonequinho do Claude Code: OS Copland OS Enterprise; Host NAVI (Claude Code); linguagens Python e JavaScript; faz bots para Discord e automação; agora automação com IA; lema: sempre aprendendo, sempre construindo. Clique para abrir o terminal e digitar."></a>
 
 <a href="https://github.com/3hic/Bot-discord"><img src="assets/card-society.svg" width="32%" alt="Layer:07 society. Bot-discord: moderação, tickets, sorteios, logs e uma sociedade secreta."></a>
 <img src="assets/card-protocol.svg" width="32%" alt="Layer:09 protocol. Stack: Python, JavaScript, Electron, SQLite, Discord e Git.">

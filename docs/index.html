@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>navi · 3hic</title>
+<meta name="description" content="O terminal do NAVI do 3hic: digite fastfetch, neofetch, help, mail ou som.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Shippori+Mincho:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ceu1: #1A1836; --ceu2: #25214B; --ceu3: #4A2A55;
+    --fundo: #14122B; --sup: #1C1A38; --borda: #34305C;
+    --texto: #EFE9DC; --texto2: #ABA6DA; --texto3: #6F6B9C;
+    --vermelho: #E0304E; --urso: #D9C3A0; --tela: #C9DCFF; --claude: #D97757;
+    --mono: 'DotGothic16', 'MS Gothic', monospace;
+    --serif: 'Shippori Mincho', 'Yu Mincho', serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    background: linear-gradient(var(--ceu1), var(--ceu2) 60%, var(--ceu3)) fixed;
+    color: var(--texto); font-family: var(--mono); font-size: 15px; line-height: 1.55;
+    display: flex; flex-direction: column; align-items: center; padding: 32px 16px;
+  }
+  body::after { /* linhas de varredura da Wired */
+    content: ''; position: fixed; inset: 0; pointer-events: none;
+    background: repeating-linear-gradient(to bottom, rgba(0,0,0,.22) 0 1px, transparent 1px 4px);
+  }
+  .janela {
+    width: min(860px, 100%); background: var(--fundo); border: 1px solid var(--borda);
+    border-radius: 8px; overflow: hidden; box-shadow: 0 24px 60px rgba(0,0,0,.45);
+  }
+  .barra {
+    display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 14px;
+    background: var(--sup); border-bottom: 1px solid var(--borda); color: var(--texto2); font-size: 14px;
+  }
+  .barra .direita { margin-left: auto; color: var(--texto3); font-size: 13px; }
+  .tela {
+    height: min(560px, 68vh); overflow-y: auto; padding: 16px 20px 8px; cursor: text;
+    scrollbar-color: var(--borda) transparent;
+  }
+  .linha { white-space: pre-wrap; word-break: break-word; min-height: 1.55em; }
+  .prompt { color: var(--texto3); }
+  .k { color: var(--texto2); } .v { color: var(--texto); } .r { color: var(--vermelho); }
+  .d { color: var(--texto3); } .u { color: var(--urso); } .c { color: var(--claude); }
+  .serif { font-family: var(--serif); font-size: 17px; }
+  .ficha { display: flex; gap: 28px; align-items: flex-start; margin: 6px 0 10px; flex-wrap: wrap; }
+  .ficha .logo { text-align: center; color: var(--claude); font-size: 13px; }
+  .ficha .logo small { display: block; color: var(--texto3); font-size: 12px; }
+  .blocos { display: flex; gap: 3px; margin-top: 6px; }
+  .blocos span { width: 22px; height: 12px; display: block; }
+  .entrada { display: flex; gap: .5em; align-items: baseline; }
+  .entrada input {
+    flex: 1; min-width: 0; background: transparent; border: 0; outline: 0; color: var(--texto);
+    font: inherit; caret-color: var(--vermelho); padding: 0;
+  }
+  .status {
+    display: flex; align-items: center; gap: 10px; padding: 8px 16px; border-top: 1px solid var(--borda);
+    color: var(--texto3); font-size: 13px; flex-wrap: wrap;
+  }
+  .status .ponto { width: 7px; height: 7px; border-radius: 50%; background: var(--vermelho); }
+  .status .som { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+  .status button {
+    font: inherit; color: var(--texto); background: var(--sup); border: 1px solid var(--borda);
+    border-radius: 4px; padding: 2px 10px; cursor: pointer;
+  }
+  .status button:focus-visible { outline: 1px dashed var(--texto3); }
+  .status input[type=range] { accent-color: var(--vermelho); width: 110px; }
+  .rodape { margin-top: 18px; color: var(--texto3); font-size: 13px; text-align: center; }
+  .rodape a { color: var(--texto2); }
+  .glitch { animation: glitch 6s steps(1, end) infinite; display: inline-block; }
+  @keyframes glitch { 0%, 92% { transform: none; } 93% { transform: translate(3px, 0); color: var(--vermelho); }
+                      95% { transform: translate(-2px, 0); color: var(--tela); } 97%, 100% { transform: none; } }
+  @media (max-width: 560px) { body { font-size: 13.5px; padding: 16px 10px; } .tela { padding: 12px; } }
+</style>
+</head>
+<body>
+<main class="janela" aria-label="Terminal do NAVI">
+  <div class="barra"><span id="iconeClawd" aria-hidden="true"></span><span>navi</span>
+    <span class="direita">copland os enterprise</span></div>
+  <div class="tela" id="tela" role="log" aria-live="polite">
+    <div id="saida"></div>
+    <label class="entrada"><span class="prompt">3hic@navi ~ %</span>
+      <input id="cmd" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Digite um comando"></label>
+  </div>
+  <div class="status">
+    <span class="ponto" aria-hidden="true"></span><span>conectado à wired</span>
+    <span class="som"><button id="tocar" type="button">▶ som da wired</button>
+      <label>volume <input id="volume" type="range" min="0" max="1" step="0.01" value="0.6"></label></span>
+  </div>
+</main>
+<p class="rodape">o terminal do NAVI de <a href="https://github.com/3hic">3hic</a>. present day, present time.</p>
+<audio id="audio" src="som-da-wired.mp3" loop preload="none"></audio>
+
+<script>
+(() => {
+  // o Clawd, igual ao do terminal do Claude Code: blocos ▐▛███▜▌ / ▝▜█████▛▘ / ▘▘ ▝▝
+  const CLAWD = [' ▐▛███▜▌', '▝▜█████▛▘', '  ▘▘ ▝▝'];
+  const Q = {' ': '', '█': 'abcd', '▌': 'ac', '▐': 'bd', '▘': 'a', '▝': 'b', '▛': 'abc', '▜': 'abd'};
+  function clawdSvg(pw, ph) {
+    let rects = '', w = 0;
+    CLAWD.forEach((linha, l) => [...linha].forEach((ch, c) => [...Q[ch]].forEach(q => {
+      const x = c * 2 + ('bd'.includes(q) ? 1 : 0), y = l * 2 + ('cd'.includes(q) ? 1 : 0);
+      w = Math.max(w, x + 1);
+      rects += `<rect x="${x * pw}" y="${y * ph}" width="${pw + .3}" height="${ph + .3}"/>`;
+    })));
+    return `<svg width="${w * pw}" height="${5 * ph}" viewBox="0 0 ${w * pw} ${5 * ph}" fill="#D97757" role="img" aria-label="Clawd, o bonequinho do Claude Code">${rects}</svg>`;
+  }
+  document.getElementById('iconeClawd').innerHTML = clawdSvg(1.05, 2.1);
+
+  const saida = document.getElementById('saida'), tela = document.getElementById('tela');
+  const cmd = document.getElementById('cmd'), audio = document.getElementById('audio');
+  const tocar = document.getElementById('tocar'), volume = document.getElementById('volume');
+  const historico = []; let pos = 0;
+
+  const esc = s => s.replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+  function linha(html, cls = '') {
+    const d = document.createElement('div');
+    d.className = 'linha ' + cls; d.innerHTML = html; saida.appendChild(d);
+  }
+  const texto = (t, cls = 'v') => linha(`<span class="${cls}">${esc(t)}</span>`);
+  const rolar = () => { tela.scrollTop = tela.scrollHeight; };
+
+  const FICHA = [
+    ['OS', 'Copland OS Enterprise'], ['Host', 'NAVI (Claude Code)'], ['Kernel', 'protocol 7'],
+    ['Uptime', 'na wired desde jul. de 2024'], ['Shell', 'lisp'], ['CPU', 'psyche'],
+    ['Linguagens', 'Python, JavaScript'], ['Faz', 'bots para Discord, automação'],
+    ['Agora', 'automação com IA'], ['Lema', 'sempre aprendendo, sempre construindo'],
+  ];
+  const CORES = ['#34305C', '#6F6B9C', '#ABA6DA', '#C9DCFF', '#D9C3A0', '#E8892B', '#E0304E', '#EFE9DC'];
+
+  function fastfetch() {
+    const info = ['<span class="r">3hic</span>@<span class="r">navi</span>', '<span class="d">---------</span>']
+      .concat(FICHA.map(([k, v]) => `<span class="k">${k}:</span> <span class="v">${esc(v)}</span>`));
+    const blocos = CORES.map(c => `<span style="background:${c}"></span>`).join('');
+    linha(`<div class="ficha"><div class="logo">${clawdSvg(9, 18)}<br>claude code<small>minha navi ♡</small></div>` +
+          `<div>${info.map(i => `<div>${i}</div>`).join('')}<div class="blocos">${blocos}</div></div></div>`);
+  }
+
+  function som(ligar) {
+    const vai = ligar ?? audio.paused;
+    if (vai) {
+      audio.volume = +volume.value;
+      audio.play().then(() => texto('♪ som da wired: o zumbido dos postes, pulsando em 7,83 Hz. (pare com: parar)', 'k'))
+        .catch(() => texto('o navegador bloqueou o som. clique em "▶ som da wired" lá embaixo.', 'r'));
+    } else { audio.pause(); texto('som parado.', 'd'); }
+  }
+  audio.addEventListener('play', () => { tocar.textContent = '❚❚ som da wired'; });
+  audio.addEventListener('pause', () => { tocar.textContent = '▶ som da wired'; });
+  tocar.addEventListener('click', () => { som(); rolar(); });
+  volume.addEventListener('input', () => { audio.volume = +volume.value; });
+
+  const COMANDOS = {
+    help() {
+      [['fastfetch / neofetch', 'a ficha do 3hic'], ['whoami', 'quem está no navi'], ['cat sobre.txt', 'sobre mim'],
+       ['ls', 'arquivos'], ['mail', 'abre a caixa de entrada'], ['som / parar', 'o som da wired (com volume lá embaixo)'],
+       ['duvet', 'a abertura, no spotify'], ['say <texto>', 'o navi fala'], ['layers', 'os 13 layers'],
+       ['date', 'que dia é hoje'], ['history', 'o que você digitou'], ['clear', 'limpa a tela']]
+        .forEach(([c, d]) => linha(`<span class="v">${esc(c.padEnd(22))}</span><span class="d">${esc(d)}</span>`));
+    },
+    fastfetch, neofetch: fastfetch,
+    whoami: () => texto('3hic'),
+    'cat sobre.txt': () => { texto('python, automação e bots para discord.', 'k'); texto('sempre aprendendo, sempre construindo.', 'k'); },
+    ls: () => linha('<span class="v">sobre.txt  </span><span class="k">mail/  projetos/  </span><span class="u">som-da-wired.mp3  </span><span class="c">navi.lisp</span>'),
+    'cat navi.lisp': () => texto("(defparameter *navi* :claude-code) ; a minha navi", 'u'),
+    'ls projetos': () => linha('<a class="k" href="https://github.com/3hic/Bot-discord" target="_blank" rel="noopener">Bot-discord/</a>'),
+    mail() {
+      linha('<span class="d">de      </span><span class="v">chisa yomoda</span>');
+      linha('<span class="d">assunto </span><span class="v">(sem assunto)</span>');
+      ['lain,', 'eu não morri.', 'só deixei o meu corpo para trás.', 'aqui na wired todo mundo está conectado.']
+        .forEach(t => linha(`<span class="serif">${esc(t)}</span>`));
+      linha('<span class="serif glitch">deus está aqui.</span>');
+    },
+    som: () => som(true), parar: () => som(false), stop: () => som(false),
+    duvet() {
+      texto('abrindo Duvet (bôa) no spotify...', 'k');
+      window.open('https://open.spotify.com/track/42qNWdLKCI41S4uzfamhFM', '_blank', 'noopener');
+    },
+    layers: () => ['weird', 'girls', 'psyche', 'religion', 'distortion', 'kids', 'society', 'rumors', 'protocol',
+                   'love', 'infornography', 'landscape', 'ego']
+      .forEach((n, i) => linha(`<span class="d">Layer:${String(i + 1).padStart(2, '0')}</span> <span class="v">${n}</span>`)),
+    date: () => { texto('present day, present time.', 'r'); texto(new Date().toLocaleString('pt-BR')); },
+    history: () => historico.forEach((h, i) => texto(`${String(i + 1).padStart(3)}  ${h}`, 'd')),
+    clear: () => { saida.innerHTML = ''; },
+    sudo: () => texto('permissão negada: só a lain tem acesso root à wired.', 'r'),
+    lain: () => texto("let's all love lain ♡", 'r'),
+    exit: () => texto('close the world, open the next.', 'r'),
+  };
+  const NOMES = Object.keys(COMANDOS).concat(['say']);
+
+  function rodar(entrada) {
+    const c = entrada.trim();
+    linha(`<span class="prompt">3hic@navi ~ % </span><span class="v">${esc(c)}</span>`);
+    if (!c) return;
+    historico.push(c); pos = historico.length;
+    if (c.startsWith('say')) {
+      const fala = c.replace(/^say\s*(-v\s+\S+\s*)?/, '').replace(/^"|"$/g, '') || 'Weird: Layer zero one';
+      texto(fala, 'k');
+      if ('speechSynthesis' in window) {
+        const u = new SpeechSynthesisUtterance(fala); u.rate = .85; u.pitch = .7; u.volume = +volume.value;
+        speechSynthesis.speak(u);
+      }
+      return;
+    }
+    const f = COMANDOS[c] || COMANDOS[c.split(/\s+/)[0]];
+    if (f && (COMANDOS[c] || !c.includes(' ') || c.startsWith('sudo'))) f(); else
+      texto(`navi: comando não encontrado: ${c}. digite help.`, 'r');
+  }
+
+  cmd.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { rodar(cmd.value); cmd.value = ''; rolar(); }
+    else if (e.key === 'ArrowUp') { if (pos > 0) cmd.value = historico[--pos]; e.preventDefault(); }
+    else if (e.key === 'ArrowDown') { cmd.value = pos < historico.length - 1 ? historico[++pos] : (pos = historico.length, ''); e.preventDefault(); }
+    else if (e.key === 'Tab') {
+      e.preventDefault();
+      const op = NOMES.filter(n => n.startsWith(cmd.value) && cmd.value);
+      if (op.length === 1) cmd.value = op[0];
+      else if (op.length > 1) { linha(`<span class="d">${esc(op.join('  '))}</span>`); rolar(); }
+    } else if (e.key === 'l' && e.ctrlKey) { e.preventDefault(); saida.innerHTML = ''; }
+  });
+  tela.addEventListener('click', () => { if (!getSelection().toString()) cmd.focus(); });
+
+  // boot
+  texto('Copland OS Enterprise', 'd');
+  linha('<span class="d">conectando à wired ... </span><span class="k">ok</span>');
+  linha('<span class="v">digite </span><span class="r">fastfetch</span><span class="v"> (ou </span><span class="r">help</span><span class="v">) e aperte enter.</span>');
+  rodar('fastfetch');
+  cmd.focus();
+})();
+</script>
+</body>
+</html>
