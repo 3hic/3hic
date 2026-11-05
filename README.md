@@ -14,7 +14,7 @@
 
 <img src="assets/sobre-lisp.svg" width="100%" alt="sobre.lisp: linguagem Python, banco SQLite3, faz bots para Discord, agora automação com IA.">
 
-<picture><img src="assets/lain-kuma.gif" width="32%" alt="Lain de pijama de urso dando uma cambalhota na cama"></picture>
+<picture><img src="assets/lain-navi-noite.gif" width="32%" alt="Lain sozinha no quarto escuro, indo até o NAVI à noite"></picture>
 <picture><img src="assets/lain-abraco.gif" width="32%" alt="Lain abraçando o ursinho e sorrindo"></picture>
 <picture><img src="assets/lain-digitando.gif" width="32%" alt="Lain digitando no NAVI, no quarto escuro"></picture>
 
