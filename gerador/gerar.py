@@ -9,6 +9,7 @@ letras que usa, porque imagem no README do GitHub não carrega nada de fora:
 Uso:  pip install fonttools brotli
       python gerador/gerar.py
 Na primeira vez as fontes são baixadas do google/fonts para gerador/.fontes (fora do git).
+As animações rodam sempre, mesmo com "reduzir movimento" ligado no sistema (pedido do dono do perfil).
 """
 import base64
 import html
@@ -108,7 +109,7 @@ class Svg:
     def __init__(self, w, h, titulo, desc):
         self.w, self.h, self.titulo, self.desc = w, h, titulo, desc
         self.letras = {k: set() for k in FONTES}
-        self.defs, self.css, self.reduzido, self.corpo = [], [], [], []
+        self.defs, self.css, self.corpo = [], [], []
 
     def texto(self, s, fonte, x, y, tam, cor, ancora=None, cls='', extra=''):
         self.letras[fonte].update(s)
@@ -124,14 +125,15 @@ class Svg:
         css = []
         for nome, letras in self.letras.items():
             letras = ''.join(sorted(letras - {'\n'}))
+            faltam = ''.join(c for c in letras if c.strip() and ord(c) not in avancos(nome))
+            if faltam:
+                print(f'  AVISO {caminho.name}: a fonte {nome} não tem "{faltam}"')
             if letras:
                 css.append("@font-face{font-family:'L-%s';src:url(data:font/woff2;base64,%s) format('woff2')}"
                            % (nome, embutir(nome, letras)))
         css += ['.%s{font-family:%s}' % (k, v[1]) for k, v in FONTES.items()]
         css.append('.dot{font-kerning:none;font-variant-ligatures:none}')
         css += self.css
-        if self.reduzido:
-            css.append('@media (prefers-reduced-motion:reduce){%s}' % ''.join(self.reduzido))
         svg = (f'<svg xmlns="http://www.w3.org/2000/svg" width="{self.w}" height="{self.h}" '
                f'viewBox="0 0 {self.w} {self.h}" role="img" aria-labelledby="titulo desc">\n'
                f'<title id="titulo">{esc(self.titulo)}</title>\n<desc id="desc">{esc(self.desc)}</desc>\n'
@@ -287,7 +289,6 @@ def hero(t):
         '.ha{opacity:.8;animation:riso 1.4s steps(1,end) 1.9s both}'
         '@keyframes riso{0%{opacity:0}10%{opacity:1}20%{opacity:0}32%{opacity:1}44%{opacity:.15}58%{opacity:1}'
         '100%{opacity:.8}}')
-    s.reduzido.append('.g0,.g1,.g2,.pd,.ha{animation:none}')
 
     if t['scan']:   # na Wired a imagem é tela: linhas de varredura
         s.defs.append('<pattern id="scan" width="4" height="4" patternUnits="userSpaceOnUse">'
@@ -356,7 +357,6 @@ def navi(t):
                  '.cur{opacity:0;animation:pisca 1.1s steps(1,end) infinite}@keyframes pisca{0%{opacity:1}50%{opacity:0}}'
                  '.onda{animation:onda 2.6s linear infinite}@keyframes onda{to{transform:translateX(-'
                  + n(lam) + 'px)}}')
-    s.reduzido.append('.p,.c{fill-opacity:1;animation:none}.l,.cur{opacity:1;animation:none}.onda{animation:none}')
     return s
 
 
@@ -453,7 +453,6 @@ def card_psyche(t):
           s.texto('psyche', 'dot', cx + lado / 2, cy + 40.5, 12, t['texto2'], ancora='middle'),
           f'<circle class="led" cx="{cx + lado - 8}" cy="{cy + lado - 8}" r="2.6" fill="{t["vermelho"]}"/>')
     s.css.append('.led{animation:led 2.4s ease-in-out infinite}@keyframes led{50%{opacity:.25}}')
-    s.reduzido.append('.led{animation:none}')
     for txt, fonte, y, tam, cor in [('agora', 'min', 146, 15, t['texto2']), ('automação', 'minb', 190, 33, t['texto']),
                                     ('com IA', 'minb', 230, 33, t['texto']),
                                     ("'(python ocr selenium)", 'dot', 272, 13, t['texto3'])]:
@@ -531,8 +530,112 @@ def rodape(t):
     return s
 
 
-PECAS = {'hero': hero, 'navi': navi, 'card-society': card_society, 'card-protocol': card_protocol,
-         'card-psyche': card_psyche, 'sobre': sobre, 'rodape': rodape}
+# ---------------------------------------------------------------- refs.txt: o que o perfil cita do anime
+
+LAYERS = ['weird', 'girls', 'psyche', 'religion', 'distortion', 'kids', 'society', 'rumors', 'protocol', 'love',
+          'infornography', 'landscape', 'ego']
+CITADOS = {1: 'no terminal', 2: 'no rodapé', 3: 'cartão agora', 7: 'cartão Bot-discord', 9: 'cartão stack'}
+REFS = [
+    ('present day, present time.', 'a narração que abre cada episódio'),
+    ('say -v Whisper', 'a voz da Apple que anuncia cada Layer'),
+    ('copland os enterprise', 'o sistema do NAVI (o Copland da Apple nunca saiu)'),
+    ('tachibana', 'a fabricante do NAVI; tachibana é uma mexerica (a Apple)'),
+    ('jogo da vida em lisp', 'o que a Lain digita no HandiNAVI, no Layer:07'),
+    ('knights of the eastern calculus', 'a sociedade secreta de hackers da série'),
+    ('protocol 7', 'o protocolo de Masami Eiri para fundir os dois mundos'),
+    ('7,83 Hz', 'a ressonância Schumann, que liga a Wired ao mundo real'),
+    ('psyche', 'o processador que a Lain instala no NAVI'),
+    ('pijama de urso', 'o escudo da Lain no mundo real'),
+    ('ワイヤード', 'a Wired, a rede da série'),
+    ("everyone's connected", 'o que a Lain diz na Cyberia, no Layer:02'),
+    ('duvet', 'a abertura, da banda britânica bôa'),
+]
+
+
+def refs(t):
+    W, H = 900, 452
+    s = Svg(W, H, 'refs.txt: as referências de Serial Experiments Lain neste perfil',
+            'Os 13 layers: ' + ', '.join(f'Layer:{i:02d} {n}' for i, n in enumerate(LAYERS, 1))
+            + '. Referências: ' + '; '.join(f'{a}: {b}' for a, b in REFS) + '.')
+    janela(s, t, W, H, 'refs.txt', 'serial experiments lain, 1998')
+    s.add(s.texto('os 13 layers', 'min', 24, 70, 15, t['texto2']),
+          s.texto('referências', 'min', 344, 70, 15, t['texto2']),
+          f'<path d="M322.5 52V{H - 58}" stroke="{t["borda"]}"/>')
+    y0, lh = 102, 24
+    for i, nome in enumerate(LAYERS, 1):
+        y, citado = y0 + (i - 1) * lh, i in CITADOS
+        rotulo = f'Layer:{i:02d}'
+        if citado:   # os Layers que aparecem no perfil ganham a mancha vermelha
+            s.add(f'<circle cx="28" cy="{y - 4.5}" r="3" fill="{t["vermelho"]}"/>',
+                  s.texto(CITADOS[i], 'min', 300, y, 12, t['texto3'], ancora='end'))
+        s.add(s.texto(rotulo, 'dot', 40, y, 14, t['texto2'] if citado else t['texto3']),
+              s.texto(nome, 'min', 40 + medir(rotulo + ' ', 'dot', 14), y, 14, t['texto'] if citado else t['texto3']))
+    for i, (chave, explica) in enumerate(REFS):
+        y, wk = y0 + i * lh, medir(chave, 'dot', 14)
+        total = wk + 12 + medir(explica, 'min', 13.5)
+        if total > 532:
+            print(f'  AVISO refs: "{chave}" ocupa {total:.0f}px (cabe 532px)')
+        s.add(s.texto(chave, 'dot', 344, y, 14, t['texto']),
+              s.texto(explica, 'min', 344 + wk + 12, y, 13.5, t['texto2']))
+    creditos = ('13 layers, TV Tokyo, 1998. Direção Ryutaro Nakamura, roteiro Chiaki J. Konaka, '
+                'personagens Yoshitoshi ABe, estúdio Triangle Staff.')
+    cabe(creditos, 'min', 12.5, 852, 'refs')
+    s.add(f'<path d="M.5 {H - 44.5}H{W - .5}" stroke="{t["borda"]}"/>',
+          s.texto(creditos, 'min', 24, H - 17, 12.5, t['texto3']))
+    return s
+
+
+# ---------------------------------------------------------------- player: Duvet, a abertura (link no README)
+
+MUSICA = dict(titulo='duvet', legenda='bôa, a abertura de serial experiments lain', duracao=203.6, tempo='3:23')
+
+
+def player(t):
+    W, H = 640, 156
+    s = Svg(W, H, 'tocando: Duvet, de bôa',
+            'Player do Copland OS tocando Duvet, da banda bôa, a abertura de Serial Experiments Lain (3:23). '
+            'A imagem é um link para ouvir no Spotify.')
+    janela(s, t, W, H, 'player', 'spotify')
+    # capa: um pedaço do céu do hero (fios, poste e as manchas vermelhas)
+    cx, cy, lado = 22, 50, 88
+    s.defs.append(f'<clipPath id="capa"><rect x="{cx}" y="{cy}" width="{lado}" height="{lado}" rx="4"/></clipPath>'
+                  f'<linearGradient id="ceuCapa" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="{t["ceu1"]}"/>'
+                  f'<stop offset=".6" stop-color="{t["ceu2"]}"/><stop offset="1" stop-color="{t["ceu3"]}"/></linearGradient>')
+    px, f = cx + 66, t['fio']
+    capa = [f'<rect x="{cx}" y="{cy}" width="{lado}" height="{lado}" fill="url(#ceuCapa)"/>',
+            fio(catenaria(cx - 4, cy + 10, px - 9, cy + 20, 9), f, 1.2),
+            fio(catenaria(cx - 4, cy + 18, px + 9, cy + 20, 11), f, 1.2),
+            fio(catenaria(px - 9, cy + 20, cx + lado + 4, cy + 26, 3), f, 1.2),
+            f'<path d="M{px - 1.6} {cy + 12}h3.2l1 {lado - 12}h-5.2Z" fill="{f}"/>',
+            f'<rect x="{px - 13}" y="{cy + 20}" width="26" height="2.4" fill="{f}"/>',
+            f'<path d="M{cx} {cy + lado}V{cy + 72}h20v-6h18v10h22v-4h28V{cy + lado}Z" fill="{t["chao"]}"/>']
+    rnd = random.Random(7)
+    capa += [f'<circle cx="{n(rnd.uniform(cx + 4, cx + lado - 4))}" cy="{n(rnd.uniform(cy + 78, cy + lado - 3))}" '
+             f'r="{n(rnd.uniform(.6, 1.6))}" fill="{t["vermelho"]}"/>' for _ in range(14)]
+    s.add(f'<g clip-path="url(#capa)">{"".join(capa)}</g>')
+    tx = cx + lado + 22
+    s.add(s.texto(MUSICA['titulo'], 'minb', tx, 86, 30, t['texto']),
+          s.texto(MUSICA['legenda'], 'min', tx, 109, 14, t['texto2']))
+    # equalizador
+    barras = ''.join(f'<rect class="eq" x="{W - 76 + i * 9}" y="62" width="5" height="24" rx="1" fill="{t["texto2"]}" '
+                     f'style="animation-duration:{.55 + (i * 37 % 7) / 10:.2f}s;animation-delay:-{i * .23:.2f}s"/>'
+                     for i in range(6))
+    s.add(barras)
+    # barra de progresso: anda no tempo real da música
+    bw = W - 22 - tx
+    s.add(f'<rect x="{tx}" y="125" width="{bw}" height="3" rx="1.5" fill="{t["borda"]}"/>',
+          f'<rect class="prog" x="{tx}" y="125" width="{bw}" height="3" rx="1.5" fill="{t["vermelho"]}"/>',
+          s.texto('ouvir no spotify', 'dot', tx, 147, 12, t['texto2']),
+          s.texto(MUSICA['tempo'], 'dot', W - 22, 147, 12, t['texto3'], ancora='end'))
+    s.css.append('.eq{transform-box:fill-box;transform-origin:50% 100%;animation:eq .8s ease-in-out infinite alternate}'
+                 '@keyframes eq{from{transform:scaleY(.22)}to{transform:scaleY(1)}}'
+                 '.prog{transform-box:fill-box;transform-origin:0 50%;animation:prog ' + n(MUSICA['duracao'])
+                 + 's linear infinite}@keyframes prog{from{transform:scaleX(.06)}to{transform:scaleX(1)}}')
+    return s
+
+
+PECAS = {'wired-hero': hero, 'navi': navi, 'card-society': card_society, 'card-protocol': card_protocol,
+         'card-psyche': card_psyche, 'refs': refs, 'sobre-lisp': sobre, 'player': player, 'rodape': rodape}
 
 if __name__ == '__main__':
     ASSETS.mkdir(exist_ok=True)
