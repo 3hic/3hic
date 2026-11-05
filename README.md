@@ -7,10 +7,7 @@
 </picture>
 
 <picture><img src="assets/lain-glitch.gif" width="49%" alt="Lain com o gorro de urso, cheia de glitch"></picture>
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/navi-escuro.svg">
-  <img src="assets/navi-claro.svg" width="49%" alt="Terminal do NAVI: whoami responde 3hic; sobre: python, automação e bots para discord, sempre aprendendo, sempre construindo.">
-</picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="assets/navi-escuro.svg"><img src="assets/navi-claro.svg" width="49%" alt="Terminal do NAVI: whoami responde 3hic; sobre: python, automação e bots para discord, sempre aprendendo, sempre construindo."></picture>
 
 <a href="https://github.com/3hic/Bot-discord"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/card-society-escuro.svg"><img src="assets/card-society-claro.svg" width="32%" alt="Layer:07 society. Bot-discord: moderação, tickets, sorteios, logs e uma sociedade secreta."></picture></a>
 <picture><source media="(prefers-color-scheme: dark)" srcset="assets/card-protocol-escuro.svg"><img src="assets/card-protocol-claro.svg" width="32%" alt="Layer:09 protocol. Stack: Python, JavaScript, Electron, SQLite, Discord e Git."></picture>
@@ -34,10 +31,7 @@
 
 <sub>let's all love lain</sub>
 
-<a href="https://open.spotify.com/track/42qNWdLKCI41S4uzfamhFM"><picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/player-escuro.svg">
-  <img src="assets/player-claro.svg" width="640" alt="Tocando Duvet, de bôa, a abertura de Serial Experiments Lain (3:23). Clique para ouvir no Spotify.">
-</picture></a>
+<a href="https://open.spotify.com/track/42qNWdLKCI41S4uzfamhFM"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/player-escuro.svg"><img src="assets/player-claro.svg" width="640" alt="Tocando Duvet, de bôa, a abertura de Serial Experiments Lain (3:23). Clique para ouvir no Spotify."></picture></a>
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/rodape-escuro.svg">
