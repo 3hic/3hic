@@ -1,8 +1,8 @@
 """Gera os SVGs do perfil 3hic no tema Serial Experiments Lain.
 
-Duas camadas, como no anime: o tema claro é o mundo real (o dia estourado de branco, postes e
-fios zumbindo) e o escuro é a Wired (o quarto da Lain à noite). Cada SVG leva embutidas só as
-letras que usa, porque imagem no README do GitHub não carrega nada de fora:
+Tema único, escuro: a Wired (o quarto da Lain à noite) — todos os quadros iguais, em qualquer tema
+do GitHub. Cada SVG leva embutidas só as letras que usa, porque imagem no README do GitHub não
+carrega nada de fora:
   - DotGothic16 (Fontworks, SIL OFL 1.1) é a voz da máquina: NAVI, terminal, código;
   - Shippori Mincho (SIL OFL 1.1) é a voz humana: o nome e as frases.
 
@@ -35,18 +35,11 @@ FONTES = {  # nome: (arquivo no google/fonts, pilha de fontes)
     'minb': ('shipporimincho/ShipporiMincho-SemiBold.ttf', "'L-minb','Yu Mincho','Hiragino Mincho ProN',serif"),
 }
 
-TEMAS = {
-    # a Wired: o quarto da Lain à noite (índigo, lavanda do GIF, creme da pele)
-    'escuro': dict(ceu1='#1A1836', ceu2='#25214B', ceu3='#4A2A55', chao='#0A0918', fio='#06050E',
-                   fundo='#14122B', sup='#1C1A38', borda='#34305C', texto='#EFE9DC', texto2='#ABA6DA',
-                   texto3='#6F6B9C', vermelho='#E0304E', urso='#D9C3A0', tela='#C9DCFF',
-                   placa='#EFE9DC', placa_txt='#14122B', grao='.16', scan=True, janelas=True),
-    # o mundo real: céu estourado de branco, fios e sombras em tinta (com as manchas vermelhas)
-    'claro': dict(ceu1='#F3F3F6', ceu2='#E9E8EF', ceu3='#D8D2E6', chao='#191628', fio='#191628',
-                  fundo='#EEEDF2', sup='#F7F6FA', borda='#CFCBDC', texto='#191628', texto2='#5F5A8A',
-                  texto3='#8F8AAE', vermelho='#C8243F', urso='#7A5536', tela='#2E2A55',
-                  placa='#191628', placa_txt='#EEEDF2', grao='.12', scan=False, janelas=False),
-}
+# a Wired: o quarto da Lain à noite (índigo, lavanda do GIF, creme da pele, as manchas vermelhas)
+TEMA = dict(ceu1='#1A1836', ceu2='#25214B', ceu3='#4A2A55', chao='#0A0918', fio='#06050E',
+            fundo='#14122B', sup='#1C1A38', borda='#34305C', texto='#EFE9DC', texto2='#ABA6DA',
+            texto3='#6F6B9C', vermelho='#E0304E', urso='#D9C3A0', tela='#C9DCFF',
+            placa='#EFE9DC', placa_txt='#14122B', grao='.16')
 LARANJA, FOLHA = '#E8892B', '#7FA35B'   # tachibana: a mexerica que dá nome à fabricante do NAVI
 
 
@@ -176,22 +169,55 @@ def janela(s, t, w, h, titulo, direita):
           s.texto(direita, 'dot', w - 16, 21.5, 13, t['texto3'], ancora='end'))
 
 
+def ceu(s, t, w, h):
+    """O céu da Wired, com linhas de varredura e grão por cima (fica no fundo; as camadas vêm depois)."""
+    s.defs.append(f'<linearGradient id="ceu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="{t["ceu1"]}"/>'
+                  f'<stop offset=".58" stop-color="{t["ceu2"]}"/><stop offset="1" stop-color="{t["ceu3"]}"/>'
+                  '</linearGradient>'
+                  '<filter id="grao" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" '
+                  'baseFrequency=".9" numOctaves="2" seed="7" stitchTiles="stitch"/>'
+                  '<feColorMatrix values="0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 1.4 -.55"/></filter>'
+                  '<pattern id="scan" width="4" height="4" patternUnits="userSpaceOnUse">'
+                  '<rect width="4" height="1" fill="#000" fill-opacity=".22"/></pattern>')
+    s.add(f'<rect width="{w}" height="{h}" fill="url(#ceu)"/>')
+
+
+def textura(s, t, w, h):
+    s.add(f'<rect width="{w}" height="{h}" fill="url(#scan)"/>',
+          f'<rect width="{w}" height="{h}" filter="url(#grao)" opacity="{t["grao"]}"/>')
+
+
+def linhas_digitadas(s, t, comandos, x0, ys, tam, inicio):
+    """Prompt + comandos digitados letra por letra. Devolve o instante em que o último termina."""
+    prompt, cw, tt = '3hic@navi ~ % ', tam * .5, inicio
+    for texto, y in zip(comandos, ys):
+        s.letras['dot'].update(prompt + texto)
+        partes = [f'<tspan class="p" style="animation-delay:{tt:.2f}s">{esc(prompt.rstrip())}</tspan>']
+        t0 = tt + .25
+        for k, ch in enumerate(texto):
+            if ch != ' ':
+                partes.append(f'<tspan class="c" x="{n(x0 + (len(prompt) + k) * cw)}" fill="{t["texto"]}" '
+                              f'style="animation-delay:{t0 + k * .045:.2f}s">{esc(ch)}</tspan>')
+        s.add(f'<text class="dot" x="{x0}" y="{n(y)}" font-size="{tam}" fill="{t["texto3"]}">{"".join(partes)}</text>')
+        tt = t0 + len(texto) * .045 + .35
+    return tt
+
+
+CSS_DIGITACAO = ('.p,.c{fill-opacity:0;animation:liga .01s steps(1,end) forwards}'
+                 '.l{opacity:0;animation:mostra .01s steps(1,end) forwards}'
+                 '@keyframes liga{to{fill-opacity:1}}@keyframes mostra{to{opacity:1}}'
+                 '.cur{opacity:0;animation:pisca 1.1s steps(1,end) infinite}@keyframes pisca{0%{opacity:1}50%{opacity:0}}')
+
+
 # ---------------------------------------------------------------- hero: postes e fios
 
 def hero(t):
     W, H = 900, 340
     s = Svg(W, H, 'serial experiments 3hic',
-            'Céu com postes e fios elétricos, como na abertura de Serial Experiments Lain. O nome 3hic em letras '
-            'grandes, a frase "present day, present time." e uma risada vermelha. Na placa do poste está escrito '
-            'ワイヤード (Wired). No chão, as sombras têm manchas vermelhas, como no anime.')
-    s.defs.append(f'<linearGradient id="ceu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="{t["ceu1"]}"/>'
-                  f'<stop offset=".58" stop-color="{t["ceu2"]}"/><stop offset="1" stop-color="{t["ceu3"]}"/>'
-                  '</linearGradient>')
-    s.defs.append('<filter id="grao" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" '
-                  'baseFrequency=".9" numOctaves="2" seed="7" stitchTiles="stitch"/>'
-                  '<feColorMatrix values="0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 1.4 -.55"/></filter>')
-    s.add(f'<rect width="{W}" height="{H}" fill="url(#ceu)"/>')
-
+            'Céu noturno com postes e fios elétricos, como na abertura de Serial Experiments Lain. O nome 3hic em '
+            'letras grandes, a frase "present day, present time." e uma risada vermelha. Na placa do poste está '
+            'escrito ワイヤード (Wired). No chão, as sombras têm manchas vermelhas, como no anime.')
+    ceu(s, t, W, H)
     px = 748                                     # o poste
     isol1, y_isol1 = [690, 716, 780, 806], 36    # isoladores da cruzeta de cima
     isol2, y_isol2 = [708, 788], 77              # e da de baixo
@@ -223,10 +249,8 @@ def hero(t):
         ax = x + w * .3
         s.add(f'<path d="M{n(ax)} {topo}v-24M{n(ax - 8)} {topo - 22}h16M{n(ax - 6)} {topo - 17}h12M{n(ax - 4)} '
               f'{topo - 12}h8" stroke="{t["chao"]}" stroke-width="1.4" fill="none"/>')
-    if t['janelas']:
-        for x, w, topo, _ in predios[1::3]:
-            s.add(f'<rect x="{n(x + w * .62)}" y="{topo + 12}" width="5" height="7" fill="{t["tela"]}" '
-                  'fill-opacity=".5"/>')
+    for x, w, topo, _ in predios[1::3]:
+        s.add(f'<rect x="{n(x + w * .62)}" y="{topo + 12}" width="5" height="7" fill="{t["tela"]}" fill-opacity=".5"/>')
     manchas = []
     for _ in range(18):           # as manchas vermelhas que o anime põe dentro das sombras
         cx, cy = rnd.uniform(0, W), rnd.uniform(300, 336)
@@ -289,74 +313,101 @@ def hero(t):
         '.ha{opacity:.8;animation:riso 1.4s steps(1,end) 1.9s both}'
         '@keyframes riso{0%{opacity:0}10%{opacity:1}20%{opacity:0}32%{opacity:1}44%{opacity:.15}58%{opacity:1}'
         '100%{opacity:.8}}')
-
-    if t['scan']:   # na Wired a imagem é tela: linhas de varredura
-        s.defs.append('<pattern id="scan" width="4" height="4" patternUnits="userSpaceOnUse">'
-                      '<rect width="4" height="1" fill="#000" fill-opacity=".22"/></pattern>')
-        s.add(f'<rect width="{W}" height="{H}" fill="url(#scan)"/>')
-    s.add(f'<rect width="{W}" height="{H}" filter="url(#grao)" opacity="{t["grao"]}"/>')
+    textura(s, t, W, H)
     return s
 
 
-# ---------------------------------------------------------------- NAVI: o terminal do Copland OS
+# ---------------------------------------------------------------- NAVI: fastfetch no Copland OS
+
+CLAWD = [  # o bonequinho do Claude Code, do jeito que aparece no terminal: a NAVI do 3hic
+    ' ▐▛███▜▌',
+    '▝▜█████▛▘',
+    '  ▘▘ ▝▝',
+]
+QUADRANTES = {' ': '', '█': 'abcd', '▌': 'ac', '▐': 'bd', '▀': 'ab', '▄': 'cd', '▘': 'a', '▝': 'b', '▖': 'c',
+              '▗': 'd', '▛': 'abc', '▜': 'abd', '▙': 'acd', '▟': 'bcd'}   # a b / c d = os 4 quadrantes do bloco
+CLAUDE = '#D97757'
+FICHA = [  # o que o fastfetch mostra: o "sistema" é a Wired, o resto é o 3hic
+    ('OS', 'Copland OS Enterprise'),
+    ('Host', 'NAVI (Claude Code)'),
+    ('Kernel', 'protocol 7'),
+    ('Uptime', 'na wired desde jul. de 2024'),
+    ('Shell', 'lisp'),
+    ('CPU', 'psyche'),
+    ('Linguagens', 'Python, JavaScript'),
+    ('Faz', 'bots para Discord, automação'),
+    ('Agora', 'automação com IA'),
+    ('Lema', 'sempre aprendendo, sempre construindo'),
+]
+
 
 def navi(t):
-    W, H = 564, 400      # mesma proporção do GIF da Lain (400×284), para ficarem lado a lado
-    s = Svg(W, H, 'NAVI, terminal do Copland OS',
-            'Um terminal digita say -v Whisper "Weird: Layer zero one" (a voz que anuncia cada episódio); '
-            'whoami responde 3hic; cat sobre.txt responde: python, automação e bots para discord. Sempre '
-            'aprendendo, sempre construindo. ping -c 1 wired responde: 64 bytes de lain, tempo 7,83 ms.')
+    W, H = 570, 400      # do lado do GIF quadrado: 40% + 57% da largura, mesma altura
+    s = Svg(W, H, 'NAVI: fastfetch no Copland OS',
+            'Terminal do NAVI. Digita say -v Whisper "Weird: Layer zero one" e depois fastfetch, que mostra o '
+            'bonequinho do Claude Code (claude code, minha navi) e a ficha: '
+            + '; '.join(f'{a}: {b}' for a, b in FICHA) + '.')
     janela(s, t, W, H, 'navi', 'copland os enterprise')
-    tam, x0, y0, lh = 16, 22, 70, 28
+    tam, x0 = 14, 22
     cw = tam * .5                      # DotGothic16: toda letra latina mede meia eme
-    prompt = '3hic@navi ~ % '
-    roteiro = [('cmd', 'say -v Whisper "Weird: Layer zero one"'),
-               ('cmd', 'whoami'),
-               ('out', '3hic', t['texto']),
-               ('cmd', 'cat sobre.txt'),
-               ('out', 'python, automação e bots para discord.', t['texto2']),
-               ('out', 'sempre aprendendo, sempre construindo.', t['texto2']),
-               ('cmd', 'ping -c 1 wired'),
-               ('out', '64 bytes de lain: tempo=7,83 ms', t['texto2']),
-               ('fim', '')]
-    tt = .6
-    for i, (tipo, conteudo, *cor) in enumerate(roteiro):
-        y = y0 + i * lh
-        if tipo == 'out':
-            s.add(s.texto(conteudo, 'dot', x0, y, tam, cor[0], cls='l', extra=f' style="animation-delay:{tt:.2f}s"'))
-            tt += .14 + (.3 if roteiro[i + 1][0] != 'out' else 0)
-            continue
-        s.letras['dot'].update(prompt + conteudo)
-        partes = [f'<tspan class="p" style="animation-delay:{tt:.2f}s">{esc(prompt.rstrip())}</tspan>']
-        t0 = tt + .28
-        for k, ch in enumerate(conteudo):
-            if ch != ' ':
-                partes.append(f'<tspan class="c" x="{n(x0 + (len(prompt) + k) * cw)}" fill="{t["texto"]}" '
-                              f'style="animation-delay:{t0 + k * .052:.2f}s">{esc(ch)}</tspan>')
-        s.add(f'<text class="dot" x="{x0}" y="{y}" font-size="{tam}" fill="{t["texto3"]}">{"".join(partes)}</text>')
-        if tipo == 'cmd':
-            tt = t0 + len(conteudo) * .052 + .38
-        else:
-            s.add(s.texto('█', 'dot', x0 + len(prompt) * cw, y, tam, t['vermelho'], cls='cur',
-                          extra=f' style="animation-delay:{tt + .25:.2f}s"'))
-    # a ressonância Schumann: 7,83 ciclos cabem na largura da janela
-    lam, pts, xx = 520 / 7.83, [], 22.0
-    while xx <= 542 + lam + 2:
-        pts.append(f'{n(xx)},{n(332 + 7 * math.sin((xx - 22) / lam * 2 * math.pi))}')
-        xx += 2
-    s.defs.append('<clipPath id="faixa"><rect x="22" y="318" width="520" height="28"/></clipPath>')
-    s.add(f'<g clip-path="url(#faixa)"><polyline class="onda" points="{" ".join(pts)}" fill="none" '
-          f'stroke="{t["texto3"]}" stroke-width="1.3" stroke-opacity=".75"/></g>',
+    tt = linhas_digitadas(s, t, ['say -v Whisper "Weird: Layer zero one"', 'fastfetch'], x0, [58, 80], tam, .5)
+    # o logo: o Clawd em pixels (cada caractere de bloco vira 2×2 quadrantes, altos como no terminal)
+    pix = {(c * 2 + (q in 'bd'), lin * 2 + (q in 'cd'))
+           for lin, linha in enumerate(CLAWD) for c, ch in enumerate(linha) for q in QUADRANTES[ch]}
+    pw, ph = 9, 18
+    largura = (max(x for x, _ in pix) + 1) * pw
+    ox, oy = x0 + (24 * cw - largura) / 2, 92
+    corridas = []      # junta os pixels vizinhos de cada linha num retângulo só (sem frestas)
+    for y in sorted({y for _, y in pix}):
+        xs = sorted(x for x, yy in pix if yy == y)
+        ini = ant = xs[0]
+        for x in xs[1:] + [None]:
+            if x != ant + 1:
+                corridas.append(f'<rect x="{n(ox + ini * pw)}" y="{oy + y * ph}" width="{(ant - ini + 1) * pw}" '
+                                f'height="{ph}"/>')
+                ini = x
+            ant = x
+    olhos = [(x, 1) for x in range(min(x for x, _ in pix), max(x for x, _ in pix)) if (x, 1) not in pix
+             and (x - 1, 1) in pix and (x + 1, 1) in pix]
+    piscar = ''.join(f'<rect class="olho" x="{n(ox + x * pw)}" y="{oy + y * ph}" width="{pw}" height="{ph}"/>'
+                     for x, y in olhos)
+    s.add(f'<g class="l" fill="{CLAUDE}" style="animation-delay:{tt:.2f}s">{"".join(corridas)}{piscar}</g>',
+          s.texto('claude code', 'dot', x0 + 12 * cw, oy + 3 * ph + 58, 13, CLAUDE, ancora='middle', cls='l',
+                  extra=f' style="animation-delay:{tt + .1:.2f}s"'),
+          s.texto('minha navi ♡', 'dot', x0 + 12 * cw, oy + 3 * ph + 78, 12, t['texto3'], ancora='middle', cls='l',
+                  extra=f' style="animation-delay:{tt + .15:.2f}s"'))
+    s.css.append('.olho{opacity:0;animation:olho 4.6s steps(1,end) infinite}'
+                 '@keyframes olho{0%,92%{opacity:0}93%,96%{opacity:1}97%,100%{opacity:0}}')
+    # a ficha ao lado
+    xi, lh = x0 + 24 * cw, 18.6
+    s.letras['dot'].update('3hic@navi-')
+    linhas = [f'<tspan fill="{t["vermelho"]}">3hic</tspan><tspan fill="{t["texto"]}">@</tspan>'
+              f'<tspan fill="{t["vermelho"]}">navi</tspan>',
+              f'<tspan fill="{t["texto3"]}">---------</tspan>']
+    for chave, valor in FICHA:
+        s.letras['dot'].update(chave + ': ' + valor)
+        cabe(chave + ': ' + valor, 'dot', tam, W - 22 - xi, 'navi')
+        linhas.append(f'<tspan fill="{t["texto2"]}">{esc(chave)}:</tspan>'
+                      f'<tspan fill="{t["texto"]}" x="{n(xi + (len(chave) + 2) * cw)}">{esc(valor)}</tspan>')
+    for i, conteudo in enumerate(linhas):
+        s.add(f'<text class="dot l" x="{n(xi)}" y="{n(104 + i * lh)}" font-size="{tam}" '
+              f'style="animation-delay:{tt + i * .035:.2f}s">{conteudo}</text>')
+    # os blocos de cor do fastfetch
+    blocos = [t['borda'], t['texto3'], t['texto2'], t['tela'], t['urso'], LARANJA, t['vermelho'], t['texto']]
+    y_bl = 104 + len(linhas) * lh - 6
+    s.add(f'<g class="l" style="animation-delay:{tt + len(linhas) * .035:.2f}s">'
+          + ''.join(f'<rect x="{n(xi + k * 24)}" y="{n(y_bl)}" width="22" height="12" fill="{c}"/>'
+                    for k, c in enumerate(blocos)) + '</g>')
+    fim = tt + len(linhas) * .035 + .3
+    s.letras['dot'].update('3hic@navi ~ %█')
+    s.add(f'<text class="dot l" x="{x0}" y="352" font-size="{tam}" fill="{t["texto3"]}" '
+          f'style="animation-delay:{fim:.2f}s">3hic@navi ~ %</text>',
+          s.texto('█', 'dot', x0 + 14 * cw, 352, tam, t['vermelho'], cls='cur', extra=f' style="animation-delay:{fim:.2f}s"'),
           f'<path d="M.5 368.5H{W - .5}" stroke="{t["borda"]}"/>',
           f'<circle cx="24" cy="385" r="3.2" fill="{t["vermelho"]}"/>',
           s.texto('conectado à wired', 'dot', 34, 389.5, 13, t['texto3']),
           s.texto('7,83 Hz', 'dot', W - 18, 389.5, 13, t['texto3'], ancora='end'))
-    s.css.append('.p,.c{fill-opacity:0;animation:liga .01s steps(1,end) forwards}'
-                 '.l{opacity:0;animation:mostra .01s steps(1,end) forwards}'
-                 '@keyframes liga{to{fill-opacity:1}}@keyframes mostra{to{opacity:1}}'
-                 '.cur{opacity:0;animation:pisca 1.1s steps(1,end) infinite}@keyframes pisca{0%{opacity:1}50%{opacity:0}}'
-                 '.onda{animation:onda 2.6s linear infinite}@keyframes onda{to{transform:translateX(-'
-                 + n(lam) + 'px)}}')
+    s.css.append(CSS_DIGITACAO)
     return s
 
 
@@ -461,6 +512,65 @@ def card_psyche(t):
     return s
 
 
+# ---------------------------------------------------------------- mail: a caixa de entrada da Lain na Wired
+
+CAIXA = [  # remetente, assunto, data (as datas são as estreias dos Layers 01 a 06)
+    ('chisa yomoda', '(sem assunto)', '06 jul'),
+    ('knights', 'a verdade única', '13 jul'),
+    ('tachibana labs', 'protocol 7: atualização', '20 jul'),
+    ('alice mizuki', 'vamos na cyberia hoje?', '27 jul'),
+    ('masami eiri', 'a wired é a realidade', '03 ago'),
+    ('navi', 'psyche instalado com sucesso', '10 ago'),
+]
+MENSAGEM = ['lain,', 'eu não morri.', 'só deixei o meu corpo para trás.', 'aqui na wired todo mundo está conectado.']
+FRASE_GLITCH = 'deus está aqui.'
+
+
+def mail(t):
+    W, H = 900, 330
+    s = Svg(W, H, 'mail: a caixa de entrada da Lain na Wired',
+            'O programa de e-mail do NAVI. Na caixa: ' + '; '.join(f'{a}, "{b}", {c}' for a, b, c in CAIXA)
+            + '. Aberta, a mensagem da Chisa: ' + ' '.join(MENSAGEM) + ' ' + FRASE_GLITCH)
+    janela(s, t, W, H, 'mail', 'copland os enterprise')
+    lw, rh = 318, 49
+    for i, (de, assunto, data) in enumerate(CAIXA):
+        y = 33 + i * rh
+        if i == 0:      # a mensagem aberta
+            s.add(f'<rect x="1" y="{y}" width="{lw - 1}" height="{rh}" fill="{t["sup"]}"/>',
+                  f'<rect x="1" y="{y}" width="3" height="{rh}" fill="{t["vermelho"]}"/>',
+                  f'<circle cx="21" cy="{y + 18}" r="3.2" fill="{t["vermelho"]}"/>')
+        s.add(s.texto(de, 'dot', 32, y + 22, 13, t['texto'] if i == 0 else t['texto2']),
+              s.texto(data, 'dot', lw - 16, y + 22, 11, t['texto3'], ancora='end'),
+              s.texto(assunto, 'min', 32, y + 40, 13.5, t['texto2'] if i == 0 else t['texto3']))
+        cabe(assunto, 'min', 13.5, lw - 48, 'mail')
+        if i:
+            s.add(f'<path d="M1 {y + .5}H{lw}" stroke="{t["borda"]}" stroke-opacity=".6"/>')
+    s.add(f'<path d="M{lw + .5} 33V{H - .5}" stroke="{t["borda"]}"/>')
+    x = lw + 26
+    for k, (rotulo, valor) in enumerate([('de', 'chisa yomoda'), ('para', 'lain iwakura'), ('assunto', '(sem assunto)')]):
+        y = 62 + k * 21
+        s.add(s.texto(rotulo, 'dot', x, y, 12, t['texto3']), s.texto(valor, 'dot', x + 66, y, 13, t['texto']))
+    s.add(s.texto('06 jul 1998, 23:47', 'dot', W - 22, 62, 12, t['texto3'], ancora='end'),
+          f'<path d="M{lw + 1} 118.5H{W - 1}" stroke="{t["borda"]}"/>')
+    for k, linha in enumerate(MENSAGEM):
+        cabe(linha, 'min', 19, W - x - 26, 'mail')
+        s.add(s.texto(linha, 'min', x, 158 + k * 33, 19, t['texto']))
+    yg = 158 + len(MENSAGEM) * 33
+    s.add(s.texto(FRASE_GLITCH, 'min', x, yg, 19, t['vermelho'], cls='m1'),
+          s.texto(FRASE_GLITCH, 'min', x, yg, 19, t['tela'], cls='m2'),
+          s.texto(FRASE_GLITCH, 'min', x, yg, 19, t['texto'], cls='m0'))
+    s.css.append(  # a última frase falha de vez em quando, como se a Wired interferisse
+        '.m1,.m2{opacity:0}.m0,.m1,.m2{animation-duration:7s;animation-iteration-count:infinite;'
+        'animation-timing-function:steps(1,end)}.m0{animation-name:m0}.m1{animation-name:m1}.m2{animation-name:m2}'
+        '@keyframes m0{0%,90%{transform:none;opacity:1}91%{transform:translate(3px,0);opacity:.6}'
+        '93%{transform:translate(-2px,0);opacity:1}95%,100%{transform:none}}'
+        '@keyframes m1{0%,90%{opacity:0}91%{opacity:.9;transform:translate(-5px,1px)}93%{transform:translate(4px,0)}'
+        '95%,100%{opacity:0;transform:none}}'
+        '@keyframes m2{0%,90%{opacity:0}91%{opacity:.8;transform:translate(5px,-1px)}93%{transform:translate(-4px,0)}'
+        '95%,100%{opacity:0;transform:none}}')
+    return s
+
+
 # ---------------------------------------------------------------- sobre.lisp (o HandiNAVI roda Lisp)
 
 CODIGO = [
@@ -515,76 +625,6 @@ def sobre(t):
     return s
 
 
-# ---------------------------------------------------------------- rodapé
-
-def rodape(t):
-    W, H = 900, 150
-    s = Svg(W, H, "no matter where you go, everyone's connected.",
-            "A frase da Lain no Layer:02, com um fio atravessando e um ponto vermelho correndo por ele.")
-    d1, d2 = catenaria(-20, 30, 920, 16, 24), catenaria(-20, 42, 920, 30, 26)
-    s.add(fio(d2, t['texto3'], 1, extra=' stroke-opacity=".45"'), fio(d1, t['texto3'], 1.3),
-          f'<circle r="3.2" fill="{t["vermelho"]}"><animateMotion dur="9s" repeatCount="indefinite" path="{d1}"/>'
-          '</circle>',
-          s.texto('no matter where you go, everyone’s connected.', 'min', W / 2, 98, 26, t['texto'], ancora='middle'),
-          s.texto('lain, layer:02', 'dot', W / 2, 128, 14, t['texto3'], ancora='middle'))
-    return s
-
-
-# ---------------------------------------------------------------- refs.txt: o que o perfil cita do anime
-
-LAYERS = ['weird', 'girls', 'psyche', 'religion', 'distortion', 'kids', 'society', 'rumors', 'protocol', 'love',
-          'infornography', 'landscape', 'ego']
-CITADOS = {1: 'no terminal', 2: 'no rodapé', 3: 'cartão agora', 7: 'cartão Bot-discord', 9: 'cartão stack'}
-REFS = [
-    ('present day, present time.', 'a narração que abre cada episódio'),
-    ('say -v Whisper', 'a voz da Apple que anuncia cada Layer'),
-    ('copland os enterprise', 'o sistema do NAVI (o Copland da Apple nunca saiu)'),
-    ('tachibana', 'a fabricante do NAVI; tachibana é uma mexerica (a Apple)'),
-    ('jogo da vida em lisp', 'o que a Lain digita no HandiNAVI, no Layer:07'),
-    ('knights of the eastern calculus', 'a sociedade secreta de hackers da série'),
-    ('protocol 7', 'o protocolo de Masami Eiri para fundir os dois mundos'),
-    ('7,83 Hz', 'a ressonância Schumann, que liga a Wired ao mundo real'),
-    ('psyche', 'o processador que a Lain instala no NAVI'),
-    ('pijama de urso', 'o escudo da Lain no mundo real'),
-    ('ワイヤード', 'a Wired, a rede da série'),
-    ("everyone's connected", 'o que a Lain diz na Cyberia, no Layer:02'),
-    ('duvet', 'a abertura, da banda britânica bôa'),
-]
-
-
-def refs(t):
-    W, H = 900, 452
-    s = Svg(W, H, 'refs.txt: as referências de Serial Experiments Lain neste perfil',
-            'Os 13 layers: ' + ', '.join(f'Layer:{i:02d} {n}' for i, n in enumerate(LAYERS, 1))
-            + '. Referências: ' + '; '.join(f'{a}: {b}' for a, b in REFS) + '.')
-    janela(s, t, W, H, 'refs.txt', 'serial experiments lain, 1998')
-    s.add(s.texto('os 13 layers', 'min', 24, 70, 15, t['texto2']),
-          s.texto('referências', 'min', 344, 70, 15, t['texto2']),
-          f'<path d="M322.5 52V{H - 58}" stroke="{t["borda"]}"/>')
-    y0, lh = 102, 24
-    for i, nome in enumerate(LAYERS, 1):
-        y, citado = y0 + (i - 1) * lh, i in CITADOS
-        rotulo = f'Layer:{i:02d}'
-        if citado:   # os Layers que aparecem no perfil ganham a mancha vermelha
-            s.add(f'<circle cx="28" cy="{y - 4.5}" r="3" fill="{t["vermelho"]}"/>',
-                  s.texto(CITADOS[i], 'min', 300, y, 12, t['texto3'], ancora='end'))
-        s.add(s.texto(rotulo, 'dot', 40, y, 14, t['texto2'] if citado else t['texto3']),
-              s.texto(nome, 'min', 40 + medir(rotulo + ' ', 'dot', 14), y, 14, t['texto'] if citado else t['texto3']))
-    for i, (chave, explica) in enumerate(REFS):
-        y, wk = y0 + i * lh, medir(chave, 'dot', 14)
-        total = wk + 12 + medir(explica, 'min', 13.5)
-        if total > 532:
-            print(f'  AVISO refs: "{chave}" ocupa {total:.0f}px (cabe 532px)')
-        s.add(s.texto(chave, 'dot', 344, y, 14, t['texto']),
-              s.texto(explica, 'min', 344 + wk + 12, y, 13.5, t['texto2']))
-    creditos = ('13 layers, TV Tokyo, 1998. Direção Ryutaro Nakamura, roteiro Chiaki J. Konaka, '
-                'personagens Yoshitoshi ABe, estúdio Triangle Staff.')
-    cabe(creditos, 'min', 12.5, 852, 'refs')
-    s.add(f'<path d="M.5 {H - 44.5}H{W - .5}" stroke="{t["borda"]}"/>',
-          s.texto(creditos, 'min', 24, H - 17, 12.5, t['texto3']))
-    return s
-
-
 # ---------------------------------------------------------------- player: Duvet, a abertura (link no README)
 
 MUSICA = dict(titulo='duvet', legenda='bôa, a abertura de serial experiments lain', duracao=203.6, tempo='3:23')
@@ -612,20 +652,21 @@ def player(t):
     rnd = random.Random(7)
     capa += [f'<circle cx="{n(rnd.uniform(cx + 4, cx + lado - 4))}" cy="{n(rnd.uniform(cy + 78, cy + lado - 3))}" '
              f'r="{n(rnd.uniform(.6, 1.6))}" fill="{t["vermelho"]}"/>' for _ in range(14)]
-    s.add(f'<g clip-path="url(#capa)">{"".join(capa)}</g>')
+    s.add(f'<g clip-path="url(#capa)">{"".join(capa)}</g>',
+          # botão de play na capa: a imagem toda é o link para ouvir
+          f'<circle cx="{cx + lado - 17}" cy="{cy + lado - 17}" r="13" fill="{t["texto"]}"/>'
+          f'<path d="M{cx + lado - 21} {cy + lado - 24}l12 7-12 7Z" fill="{t["fundo"]}"/>')
     tx = cx + lado + 22
     s.add(s.texto(MUSICA['titulo'], 'minb', tx, 86, 30, t['texto']),
           s.texto(MUSICA['legenda'], 'min', tx, 109, 14, t['texto2']))
-    # equalizador
     barras = ''.join(f'<rect class="eq" x="{W - 76 + i * 9}" y="62" width="5" height="24" rx="1" fill="{t["texto2"]}" '
                      f'style="animation-duration:{.55 + (i * 37 % 7) / 10:.2f}s;animation-delay:-{i * .23:.2f}s"/>'
                      for i in range(6))
     s.add(barras)
-    # barra de progresso: anda no tempo real da música
-    bw = W - 22 - tx
+    bw = W - 22 - tx    # barra de progresso: anda no tempo real da música
     s.add(f'<rect x="{tx}" y="125" width="{bw}" height="3" rx="1.5" fill="{t["borda"]}"/>',
           f'<rect class="prog" x="{tx}" y="125" width="{bw}" height="3" rx="1.5" fill="{t["vermelho"]}"/>',
-          s.texto('ouvir no spotify', 'dot', tx, 147, 12, t['texto2']),
+          s.texto('clique para ouvir no spotify', 'dot', tx, 147, 12, t['texto2']),
           s.texto(MUSICA['tempo'], 'dot', W - 22, 147, 12, t['texto3'], ancora='end'))
     s.css.append('.eq{transform-box:fill-box;transform-origin:50% 100%;animation:eq .8s ease-in-out infinite alternate}'
                  '@keyframes eq{from{transform:scaleY(.22)}to{transform:scaleY(1)}}'
@@ -634,13 +675,29 @@ def player(t):
     return s
 
 
+# ---------------------------------------------------------------- rodapé: fecha com o mesmo céu do topo
+
+def rodape(t):
+    W, H = 900, 160
+    s = Svg(W, H, "no matter where you go, everyone's connected.",
+            "A frase da Lain no Layer:02, sob o céu da Wired, com um fio atravessando e um ponto vermelho correndo por ele.")
+    ceu(s, t, W, H)
+    d1, d2 = catenaria(-20, 26, 920, 14, 22), catenaria(-20, 38, 920, 28, 24)
+    s.add(fio(d2, t['fio'], 1.2), fio(d1, t['fio'], 1.6),
+          f'<circle r="3.2" fill="{t["vermelho"]}"><animateMotion dur="9s" repeatCount="indefinite" path="{d1}"/>'
+          '</circle>',
+          s.texto('no matter where you go, everyone’s connected.', 'min', W / 2, 104, 27, t['texto'], ancora='middle'),
+          s.texto('lain, layer:02', 'dot', W / 2, 134, 14, t['texto2'], ancora='middle'))
+    textura(s, t, W, H)
+    return s
+
+
 PECAS = {'wired-hero': hero, 'navi': navi, 'card-society': card_society, 'card-protocol': card_protocol,
-         'card-psyche': card_psyche, 'refs': refs, 'sobre-lisp': sobre, 'player': player, 'rodape': rodape}
+         'card-psyche': card_psyche, 'mail': mail, 'sobre-lisp': sobre, 'player': player, 'rodape': rodape}
 
 if __name__ == '__main__':
     ASSETS.mkdir(exist_ok=True)
-    for tema, cores_tema in TEMAS.items():
-        for nome, fazer in PECAS.items():
-            caminho = ASSETS / f'{nome}-{tema}.svg'
-            tamanho = fazer(cores_tema).salvar(caminho)
-            print(f'{caminho.name}: {tamanho / 1024:.0f} KB')
+    for nome, fazer in PECAS.items():
+        caminho = ASSETS / f'{nome}.svg'
+        tamanho = fazer(TEMA).salvar(caminho)
+        print(f'{caminho.name}: {tamanho / 1024:.0f} KB')
